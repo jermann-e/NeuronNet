@@ -1,5 +1,69 @@
 #include "network.h"
 #include "random.h"
+#include <map>
+
+std::set<size_t> Network::step(const std::vector<double>& means_){
+	//------------------------------ à coder -----------------------------//
+
+	std::set<size_t> set_;
+	double w(0.0);
+	double exitation(0.0);
+	double inhibition(0.0);
+	
+	for(size_t i(0); i < neurons.size(); ++i){
+			if(neurons[i].firing()) {
+				neurons[i].reset();
+				set_.insert(i);
+			}
+	}
+	
+	
+		for(size_t i = 0 ; i < neurons.size(); ++i){
+				if(neurons[i].is_inhibitory()){
+					w = 0.4;
+				} else {
+					w = 1.0;
+				}
+				std::vector<std::pair<size_t, double> > neighb = neighbors(i);
+				for(auto voisin : neighb){
+					if (set_.set::find(voisin.first) != set_.end()){
+						if(neurons[voisin.first].is_inhibitory()){
+							inhibition += voisin.second;
+						} else {
+							exitation += voisin.second;
+						}
+					}
+				}
+			neurons[i].input(w*means_[i] + 0.5*exitation + inhibition);
+			exitation = 0.0;
+			inhibition = 0.0;
+			neurons[i].step();
+			}
+	return set_;
+}
+
+std::pair<size_t, double> Network::degree(const size_t& index_) const{
+	//------------------------------ à coder -----------------------------//
+	std::vector<std::pair<size_t, double> > neighbors_(neighbors(index_));
+	size_t nb_connections (neighbors_.size());
+	double sum_intensity(0.0);
+	for(const auto& sm_pair : neighbors_){
+			sum_intensity += sm_pair.second;
+	}
+	return {nb_connections, sum_intensity};
+}
+
+
+std::vector<std::pair<size_t, double> > Network::neighbors(const size_t& nb) const{
+	//------------------------------ à coder -----------------------------//
+	std::vector<std::pair<size_t, double> > neighbors_;
+	std::map<std::pair<size_t, size_t>, double>::const_iterator itlow;
+	itlow = links.lower_bound ({nb, 0});
+	for (auto it = itlow; it != links.end() and it->first.first == nb; ++it){
+			neighbors_.push_back({it->first.second, it->second});
+	}
+	return neighbors_;
+}
 
 void Network::resize(const size_t &n, double inhib) {
     size_t old = size();
